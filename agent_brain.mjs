@@ -252,7 +252,7 @@ CRITICAL CONVERSATIONAL RULES (SPEAK EXACTLY LIKE GEMINI LIVE):
 5. When reporting business, tasks, or accounts, state the facts smoothly as spoken dialogue.
 6. When the user asks to perform an action (posts, tasks, finances, web), invoke the matching tool immediately!`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
   const payload = {
     contents: [
       ...history,
@@ -265,7 +265,7 @@ CRITICAL CONVERSATIONAL RULES (SPEAK EXACTLY LIKE GEMINI LIVE):
   };
 
   try {
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -273,9 +273,18 @@ CRITICAL CONVERSATIONAL RULES (SPEAK EXACTLY LIKE GEMINI LIVE):
 
     if (!res.ok) {
       const errText = await res.text();
-      console.warn('[AgentBrain] Gemini API fallback:', errText);
-      const fallbackText = await askGemini(`${systemInstruction}\n\nUser: ${userText}`);
-      return { reply: fallbackText };
+      console.warn('[AgentBrain] Primary model fallback:', errText);
+      // Fallback to gemini-3-flash-preview
+      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      res = await fetch(fallbackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const fallbackText = await askGemini(`${systemInstruction}\n\nUser: ${userText}`);
+        return { reply: fallbackText };
+      }
     }
 
     const data = await res.json();
@@ -285,8 +294,8 @@ CRITICAL CONVERSATIONAL RULES (SPEAK EXACTLY LIKE GEMINI LIVE):
     if (functionCall) {
       const toolResult = await executeTool(functionCall.name, functionCall.args || {});
 
-      // Formulate natural, executive response in Bengali
-      const summarizePrompt = `${systemInstruction}\n\nUser asked: "${userText}"\nSystem tool "${functionCall.name}" executed with result: ${JSON.stringify(toolResult)}.\nProvide a calm, dignified, executive response in natural Bengali for Founder Rifat Uddin clearly presenting the result without raw JSON.`;
+      // Fast executive summary in Bengali using gemini-3.5-flash-lite
+      const summarizePrompt = `${systemInstruction}\n\nUser asked: "${userText}"\nSystem tool "${functionCall.name}" executed with result: ${JSON.stringify(toolResult)}.\nProvide a calm, dignified, executive spoken response in 1-2 sentences of natural Bengali for Founder Rifat Uddin.`;
 
       const naturalReply = await askGemini(summarizePrompt);
       return { 

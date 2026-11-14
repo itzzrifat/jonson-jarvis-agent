@@ -3,20 +3,25 @@ export async function askGemini(prompt, apiKey = process.env.GEMINI_API_KEY) {
     return 'Gemini API key is not configured.';
   }
 
-  const models = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.8-flash'];
+  const models = ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.5-flash'];
   for (const model of models) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       const payload = {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+        generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
       };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) continue;
       const data = await res.json();

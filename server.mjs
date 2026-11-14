@@ -55,7 +55,7 @@ app.get('/jarvis', (req, res) => {
 });
 
 // 1.2 JARVIS Voice API Endpoint (For iPhone Siri Shortcuts, Action Button & Web HUD)
-app.post('/api/jarvis/voice', async (req, res) => {
+app.post(['/api/jarvis/voice', '/jarvis/voice'], async (req, res) => {
   let userQuery = (req.body.message || req.body.prompt || req.body.text || req.body.query || '').trim();
 
   // If audio is uploaded directly (base64)
@@ -159,7 +159,7 @@ async function sendTelegram(chatId, text, photoPath = null) {
 async function transcribeAudioWithGemini(audioBuffer, mimeType = 'audio/ogg') {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return '';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
   const base64Data = audioBuffer.toString('base64');
   const payload = {
     contents: [{

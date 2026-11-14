@@ -511,15 +511,32 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let currentAudio = null;
+    let unlockedAudio = null;
+    let isAudioUnlocked = false;
 
-    // Unlock iOS Audio on First Interaction
+    // 1. Prime / Unlock iOS Safari HTML5 Audio on user touch/click
     function unlockAudio() {
-      if (!window.audioUnlocked) {
-        const dummy = new Audio();
-        dummy.play().catch(() => {});
-        window.audioUnlocked = true;
-      }
+      if (isAudioUnlocked) return;
+      try {
+        if (!unlockedAudio) {
+          unlockedAudio = new Audio();
+        }
+        unlockedAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        const p = unlockedAudio.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            unlockedAudio.pause();
+            isAudioUnlocked = true;
+          }).catch(() => {});
+        } else {
+          isAudioUnlocked = true;
+        }
+      } catch (e) {}
     }
+
+    ['touchstart', 'touchend', 'mousedown', 'click'].forEach(evt => {
+      window.addEventListener(evt, unlockAudio, { passive: true });
+    });
 
     // 1. Voice Recording Toggle (MediaRecorder API with Web Speech fallback)
     async function toggleRecording() {
@@ -661,13 +678,22 @@
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
       });
-      if (v === 'Puck') document.getElementById('voicePuck')?.classList.add('active');
-      if (v === 'Aoede') document.getElementById('voiceAoede')?.classList.add('active');
-      if (v === 'Charon') document.getElementById('voiceCharon')?.classList.add('active');
+      const speakerEl = document.getElementById('speakerLabel');
+      if (v === 'Puck') {
+        document.getElementById('voicePuck')?.classList.add('active');
+        if (speakerEl) speakerEl.innerHTML = '<span>🤖</span> JONSON CLOUD • GEMINI LIVE (PUCK)';
+      } else if (v === 'Aoede') {
+        document.getElementById('voiceAoede')?.classList.add('active');
+        if (speakerEl) speakerEl.innerHTML = '<span>🤖</span> JONSON CLOUD • GEMINI LIVE (AOEDE)';
+      } else if (v === 'Charon') {
+        document.getElementById('voiceCharon')?.classList.add('active');
+        if (speakerEl) speakerEl.innerHTML = '<span>🤖</span> JONSON CLOUD • BANGLA VOICE SKILL (CHARON)';
+      }
     }
 
     // 2. Upload Audio Query (Direct to Gemini Multimodal Audio Transcriber)
     async function uploadAudioQuery(blob) {
+      unlockAudio();
       setThinkingState();
 
       const reader = new FileReader();
@@ -684,6 +710,13 @@
             })
           });
 
+          if (!res.ok) {
+            const errData = await res.json().catch(() => null);
+            dialogueText.innerText = errData?.error || "সার্ভার থেকে সঠিক রেসপন্স পাওয়া যায়নি।";
+            resetState();
+            return;
+          }
+
           const data = await res.json();
           handleServerResponse(data);
         } catch (e) {
@@ -697,6 +730,7 @@
 
     // 3. Process Text Query
     async function processTextQuery(query) {
+      unlockAudio();
       setThinkingState();
 
       try {
@@ -709,6 +743,13 @@
           })
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          dialogueText.innerText = errData?.error || "সার্ভার থেকে সঠিক রেসপন্স পাওয়া যায়নি।";
+          resetState();
+          return;
+        }
+
         const data = await res.json();
         handleServerResponse(data);
       } catch (e) {
@@ -718,44 +759,74 @@
       }
     }
 
-    // 4. Handle Server Response & Play Natural Bangla Audio (Bangla-Voice Skill / Charon)
+    // 4. Handle Server Response & Play Natural Bangla Audio
     function handleServerResponse(data) {
       const reply = data.reply || 'কাজ সম্পন্ন হয়েছে!';
       dialogueText.innerHTML = reply.replace(/\n/g, '<br>');
 
-      // Play Gemini TTS Audio
+      const spoken = data.spoken || reply;
       if (data.audioBase64) {
-        playBanglaVoice(data.audioBase64, data.audioMime || 'audio/wav');
+        playBanglaVoice(data.audioBase64, data.audioMime || 'audio/wav', spoken);
       } else {
-        resetState();
+        fallbackWebSpeech(spoken);
       }
     }
 
-    function playBanglaVoice(base64Wav, mimeType) {
+    function playBanglaVoice(base64Wav, mimeType, fallbackText = '') {
       if (currentAudio) {
-        currentAudio.pause();
+        try { currentAudio.pause(); } catch(e){}
         currentAudio = null;
       }
 
       setSpeakingState();
-      const audioUrl = `data:${mimeType};base64,${base64Wav}`;
-      currentAudio = new Audio(audioUrl);
 
-      currentAudio.onended = () => {
-        resetState();
-        currentAudio = null;
-      };
+      try {
+        const audioUrl = `data:${mimeType};base64,${base64Wav}`;
+        currentAudio = unlockedAudio || new Audio();
+        currentAudio.src = audioUrl;
 
-      currentAudio.onerror = (e) => {
-        console.warn('[AudioPlayError]', e);
-        resetState();
-        currentAudio = null;
-      };
+        currentAudio.onended = () => {
+          resetState();
+          currentAudio = null;
+        };
 
-      currentAudio.play().catch(err => {
-        console.warn('[AutoplayPolicy]', err);
+        currentAudio.onerror = (e) => {
+          console.warn('[AudioPlayError]', e);
+          currentAudio = null;
+          fallbackWebSpeech(fallbackText);
+        };
+
+        const playPromise = currentAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn('[AutoplayPolicy]', err);
+            fallbackWebSpeech(fallbackText);
+          });
+        }
+      } catch (err) {
+        fallbackWebSpeech(fallbackText);
+      }
+    }
+
+    // Native Web Speech Fallback so Jarvis ALWAYS speaks out loud
+    function fallbackWebSpeech(text) {
+      if (!text || !('speechSynthesis' in window)) {
         resetState();
-      });
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const clean = text.replace(/<[^>]*>?/gm, '').replace(/[*#`_~]/g, '').trim();
+        const utterance = new SpeechSynthesisUtterance(clean);
+        utterance.lang = 'bn-BD';
+        utterance.rate = 0.95;
+        utterance.onend = () => resetState();
+        utterance.onerror = () => resetState();
+        setSpeakingState();
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        resetState();
+      }
     }
 
     // 5. Input Submission
