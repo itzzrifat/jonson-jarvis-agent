@@ -5,11 +5,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(__dirname, 'data');
 const STORAGE_FILE = path.join(DATA_DIR, 'assistant_memory.json');
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Read-only filesystem fallback
 }
 
 function getDefaultData() {
@@ -27,24 +31,32 @@ function getDefaultData() {
   };
 }
 
+let inMemoryData = null;
+
 export function loadStorage() {
+  if (inMemoryData) return inMemoryData;
   try {
     if (fs.existsSync(STORAGE_FILE)) {
-      return JSON.parse(fs.readFileSync(STORAGE_FILE, 'utf8'));
+      inMemoryData = JSON.parse(fs.readFileSync(STORAGE_FILE, 'utf8'));
+      return inMemoryData;
     }
   } catch (e) {
-    console.error('[Storage] Read error:', e.message);
+    console.warn('[Storage] Read error:', e.message);
   }
-  const initData = getDefaultData();
-  saveStorage(initData);
-  return initData;
+  inMemoryData = getDefaultData();
+  saveStorage(inMemoryData);
+  return inMemoryData;
 }
 
 export function saveStorage(data) {
+  inMemoryData = data;
   try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
     fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (e) {
-    console.error('[Storage] Save error:', e.message);
+    console.warn('[Storage] Save error:', e.message);
   }
 }
 

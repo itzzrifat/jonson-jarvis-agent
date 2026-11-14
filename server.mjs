@@ -343,49 +343,50 @@ app.post('/api/telegram-webhook', async (req, res) => {
   await sendTelegram(chatId, agentResponse.reply);
 });
 
-// 5. Automated 24/7 Cloud Schedulers (Cron in UTC, Dhaka is UTC+6)
+// 5. Automated 24/7 Cloud Schedulers (Only in persistent server, not serverless)
+if (!process.env.VERCEL) {
+  // Daily Morning Executive Briefing at 8:30 AM Dhaka (2:30 AM UTC)
+  cron.schedule('30 2 * * *', async () => {
+    addLog('[Cron] Sending Daily Morning Executive Briefing...');
+    if (!OWNER_CHAT_ID) return;
 
-// Daily Morning Executive Briefing at 8:30 AM Dhaka (2:30 AM UTC)
-cron.schedule('30 2 * * *', async () => {
-  addLog('[Cron] Sending Daily Morning Executive Briefing...');
-  if (!OWNER_CHAT_ID) return;
+    const tasks = listTasks(true);
+    const fin = getExpenseSummary();
+    const dateStr = new Date().toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka', weekday: 'long', month: 'long', day: 'numeric' });
 
-  const tasks = listTasks(true);
-  const fin = getExpenseSummary();
-  const dateStr = new Date().toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka', weekday: 'long', month: 'long', day: 'numeric' });
+    const morningBrief = `🌅 <b>শুভ সকাল রিফাত ভাই!</b>\n\n` +
+      `📅 <b>আজ:</b> ${dateStr}\n` +
+      `📋 <b>আজকের পেন্ডিং টাস্ক:</b> ${tasks.length} টি\n` +
+      `💰 <b>হিসাব ক্যাশ ব্যালেন্স:</b> ৳${fin.balance.toLocaleString('en-US')}\n` +
+      `🚀 <b>সোশ্যাল মিডিয়া অটোপাইলট:</b> ক্লাউডে সক্রিয় (সারাদিনে ১০টি সাইকেল চলবে)\n\n` +
+      `<i>"কঠিন পরিস্থিতিই নতুন সফলতার সুযোগ তৈরি করে। আজকের দিনটি আপনার জন্য সফল ও ফলপ্রসূ হোক!"</i>`;
 
-  const morningBrief = `🌅 <b>শুভ সকাল রিফাত ভাই!</b>\n\n` +
-    `📅 <b>আজ:</b> ${dateStr}\n` +
-    `📋 <b>আজকের পেন্ডিং টাস্ক:</b> ${tasks.length} টি\n` +
-    `💰 <b>হিসাব ক্যাশ ব্যালেন্স:</b> ৳${fin.balance.toLocaleString('en-US')}\n` +
-    `🚀 <b>সোশ্যাল মিডিয়া অটোপাইলট:</b> ক্লাউডে সক্রিয় (সারাদিনে ১০টি সাইকেল চলবে)\n\n` +
-    `<i>"কঠিন পরিস্থিতিই নতুন সফলতার সুযোগ তৈরি করে। আজকের দিনটি আপনার জন্য সফল ও ফলপ্রসূ হোক!"</i>`;
+    await sendTelegram(OWNER_CHAT_ID, morningBrief);
+  });
 
-  await sendTelegram(OWNER_CHAT_ID, morningBrief);
-});
+  // Facebook Growth: 5 times daily (10:30 AM, 1:30 PM, 4:30 PM, 7:30 PM, 10:30 PM Dhaka)
+  cron.schedule('30 4,7,10,13,16 * * *', async () => {
+    addLog('[Cron] Running scheduled Facebook Growth...');
+    const res = await runFacebookCloudCycle({ maxLikes: 4 });
+    if (res.status === 'success' && OWNER_CHAT_ID) {
+      await sendTelegram(OWNER_CHAT_ID, `🤖 <b>ফেসবুক অটো-গ্রোথ আপডেট:</b> ${res.likesDone} টি পোস্টে লাইক সম্পন্ন।`, res.proofPath);
+    }
+  });
 
-// Facebook Growth: 5 times daily (10:30 AM, 1:30 PM, 4:30 PM, 7:30 PM, 10:30 PM Dhaka)
-cron.schedule('30 4,7,10,13,16 * * *', async () => {
-  addLog('[Cron] Running scheduled Facebook Growth...');
-  const res = await runFacebookCloudCycle({ maxLikes: 4 });
-  if (res.status === 'success' && OWNER_CHAT_ID) {
-    await sendTelegram(OWNER_CHAT_ID, `🤖 <b>ফেসবুক অটো-গ্রোথ আপডেট:</b> ${res.likesDone} টি পোস্টে লাইক সম্পন্ন।`, res.proofPath);
-  }
-});
+  // Instagram Growth: 5 times daily (10:00 AM, 1:00 PM, 4:00 PM, 7:00 PM, 10:00 PM Dhaka)
+  cron.schedule('0 4,7,10,13,16 * * *', async () => {
+    addLog('[Cron] Running scheduled Instagram Growth...');
+    const res = await runInstagramCloudCycle({ maxLikes: 4 });
+    if (res.status === 'success' && OWNER_CHAT_ID) {
+      await sendTelegram(OWNER_CHAT_ID, `📸 <b>ইনস্টাগ্রাম অটো-গ্রোথ আপডেট:</b> #${res.tag} টার্গেটে ${res.likesDone} টি পোস্টে লাইক সম্পন্ন।`, res.proofPath);
+    }
+  });
 
-// Instagram Growth: 5 times daily (10:00 AM, 1:00 PM, 4:00 PM, 7:00 PM, 10:00 PM Dhaka)
-cron.schedule('0 4,7,10,13,16 * * *', async () => {
-  addLog('[Cron] Running scheduled Instagram Growth...');
-  const res = await runInstagramCloudCycle({ maxLikes: 4 });
-  if (res.status === 'success' && OWNER_CHAT_ID) {
-    await sendTelegram(OWNER_CHAT_ID, `📸 <b>ইনস্টাগ্রাম অটো-গ্রোথ আপডেট:</b> #${res.tag} টার্গেটে ${res.likesDone} টি পোস্টে লাইক সম্পন্ন।`, res.proofPath);
-  }
-});
-
-// Self Keep-Alive Ping (Runs every 10 minutes)
-cron.schedule('*/10 * * * *', () => {
-  addLog('[Heartbeat] Jonson AI Cloud Agent alive and active.');
-});
+  // Self Keep-Alive Ping (Runs every 10 minutes)
+  cron.schedule('*/10 * * * *', () => {
+    addLog('[Heartbeat] Jonson AI Cloud Agent alive and active.');
+  });
+}
 
 // 6. Start Server (Only listen if not in serverless environment)
 if (!process.env.VERCEL) {
