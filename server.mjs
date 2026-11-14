@@ -387,11 +387,14 @@ cron.schedule('*/10 * * * *', () => {
   addLog('[Heartbeat] Jonson AI Cloud Agent alive and active.');
 });
 
-// 6. Start Server
-app.listen(PORT, '0.0.0.0', () => {
-  addLog(`Jonson AI Cloud Agent live on port ${PORT}!`);
-  console.log(`========================================================`);
-  console.log(`  Jonson AI 24/7 Cloud Assistant — Port ${PORT}`);
-  console.log(`  Hugging Face Spaces Engine • 2 vCPU / 16 GB RAM`);
-  console.log(`========================================================`);
-});
+// 6. Start Server (Only listen if not in serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    addLog(`Jonson AI Cloud Agent live on port ${PORT}!`);
+    console.log(`========================================================`);
+    console.log(`  Jonson AI 24/7 Cloud Assistant — Port ${PORT}`);
+    console.log(`========================================================`);
+  });
+}
+
+export default app;
