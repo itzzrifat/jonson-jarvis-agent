@@ -84,8 +84,9 @@ app.post('/api/jarvis/voice', async (req, res) => {
       .replace(/\n+/g, '. ')
       .trim();
 
-    // Generate real Bangla speech using Gemini TTS (Charon voice, bangla-voice skill)
-    const audioResult = await synthesizeBanglaVoice(spoken, 'Charon');
+    // Generate natural Bangla speech using Gemini TTS (Puck / Aoede / Charon)
+    const chosenVoice = req.body.voice || 'Puck';
+    const audioResult = await synthesizeBanglaVoice(spoken, chosenVoice);
 
     res.json({
       success: true,

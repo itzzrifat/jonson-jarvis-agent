@@ -320,6 +320,35 @@
       background: rgba(0, 242, 254, 0.25);
     }
 
+    /* Voice Persona Pills */
+    .voice-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 20px;
+      margin-top: 14px;
+      margin-bottom: 2px;
+    }
+
+    .voice-pill {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .voice-pill.active {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+    }
+
     /* Bottom Input Bar */
     .input-bar {
       display: flex;
@@ -437,6 +466,13 @@
       </div>
     </div>
   </main>
+
+  <!-- Voice Persona Selector -->
+  <div class="voice-selector">
+    <button class="voice-pill active" id="voicePuck" onclick="setVoice('Puck')">🎙️ Gemini পুরুষ (Puck)</button>
+    <button class="voice-pill" id="voiceAoede" onclick="setVoice('Aoede')">🎙️ Gemini নারী (Aoede)</button>
+    <button class="voice-pill" id="voiceCharon" onclick="setVoice('Charon')">🎙️ রাশভারী (Charon)</button>
+  </div>
 
   <!-- Quick Action Pills -->
   <section class="quick-actions">
@@ -615,6 +651,21 @@
       waveform.className = 'waveform';
     }
 
+    let selectedVoice = localStorage.getItem('jarvis_voice') || 'Puck';
+    setVoice(selectedVoice);
+
+    function setVoice(v) {
+      selectedVoice = v;
+      localStorage.setItem('jarvis_voice', v);
+      ['voicePuck', 'voiceAoede', 'voiceCharon'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      if (v === 'Puck') document.getElementById('voicePuck')?.classList.add('active');
+      if (v === 'Aoede') document.getElementById('voiceAoede')?.classList.add('active');
+      if (v === 'Charon') document.getElementById('voiceCharon')?.classList.add('active');
+    }
+
     // 2. Upload Audio Query (Direct to Gemini Multimodal Audio Transcriber)
     async function uploadAudioQuery(blob) {
       setThinkingState();
@@ -628,7 +679,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               audio: base64Audio,
-              mimeType: blob.type || 'audio/webm'
+              mimeType: blob.type || 'audio/webm',
+              voice: selectedVoice
             })
           });
 
@@ -651,7 +703,10 @@
         const res = await fetch('/api/jarvis/voice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: query })
+          body: JSON.stringify({
+            message: query,
+            voice: selectedVoice
+          })
         });
 
         const data = await res.json();

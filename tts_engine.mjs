@@ -1,66 +1,72 @@
 /**
  * Bangla Voice Engine using official Gemini TTS
- * Following the bangla-voice skill specification (Charon voice, executive assistant tone)
+ * Supports Gemini Live voices: Puck (Natural Male), Aoede (Natural Female), Charon (Dignified Male)
  */
-export async function synthesizeBanglaVoice(text, voice = 'Charon') {
+export async function synthesizeBanglaVoice(text, voice = 'Puck') {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || !text) return null;
 
-  // Clean markdown, symbols, and formatting for crystal-clear pronunciation
+  // Clean markdown, symbols, and formatting for natural spoken speech
   const cleanText = text
     .replace(/<[^>]*>?/gm, '')
-    .replace(/[*#`_]/g, '')
+    .replace(/[*#`_~]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // If text is too long for real-time response, take first 250 characters for immediate speech
-  const speechText = cleanText.length > 300 
-    ? cleanText.slice(0, 300) + '... বিস্তারিত নিচে দেখুন।'
+  // Keep spoken response concise for fast sub-2-second delivery
+  const speechText = cleanText.length > 200 
+    ? cleanText.slice(0, 200).replace(/[,।!?][^,।!?]*$/, '') + '।'
     : cleanText;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key=${apiKey}`;
-  const payload = {
-    contents: [{
-      parts: [{
-        text: `পড়ো একটি শান্ত, স্পষ্ট, ধীর-স্থির ও রাশভারী এক্সিকিউটিভ অ্যাসিস্ট্যান্ট ভঙ্গিতে, স্বাভাবিক বাংলাদেশি পেসিংয়ে:\n\n${speechText}`
-      }]
-    }],
-    generationConfig: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: voice
+  const models = ['gemini-3.8-flash-tts', 'gemini-2.5-flash-preview-tts'];
+  
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const payload = {
+      contents: [{
+        parts: [{
+          text: `পড়ো একজন বন্ধুসুলভ, চটপটে ও প্রাণবন্ত মানুষের স্বাভাবিক কথ্য ভঙ্গিতে, ঠিক যেমন ফোনে সরাসরি কথা বলে:\n\n${speechText}`
+        }]
+      }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: voice || 'Puck'
+            }
           }
         }
       }
-    }
-  };
+    };
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn('[BanglaTTS] API error:', errText);
-      return null;
-    }
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`[BanglaTTS] Model ${model} returned:`, errText);
+        continue;
+      }
 
-    const data = await res.json();
-    const part = data.candidates?.[0]?.content?.parts?.[0];
-    const inline = part?.inlineData || part?.inline_data;
-    if (inline?.data) {
-      return {
-        base64: inline.data,
-        mimeType: inline.mimeType || 'audio/wav'
-      };
+      const data = await res.json();
+      const part = data.candidates?.[0]?.content?.parts?.[0];
+      const inline = part?.inlineData || part?.inline_data;
+      if (inline?.data) {
+        return {
+          base64: inline.data,
+          mimeType: inline.mimeType || 'audio/wav',
+          voiceUsed: voice
+        };
+      }
+    } catch (err) {
+      console.warn(`[BanglaTTS] Error with ${model}:`, err.message);
     }
-  } catch (err) {
-    console.error('[BanglaTTS] Error:', err.message);
   }
+
   return null;
 }
