@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import puppeteer from 'puppeteer';
+// dynamic import puppeteer
+let puppeteer = null;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,13 @@ const TARGET_HASHTAGS = [
 ];
 
 export async function launchBrowser() {
+  if (!puppeteer) {
+    try {
+      puppeteer = (await import('puppeteer')).default;
+    } catch (e) {
+      throw new Error('Puppeteer browser is only available on container/local environment, not in serverless.');
+    }
+  }
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',

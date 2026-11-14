@@ -1,19 +1,15 @@
 {
-  "name": "jonson-cloud-agent",
+  "name": "jonson-jarvis-agent",
   "version": "1.0.0",
-  "description": "Jonson AI 24/7 Cloud Autonomous Agent - Sohoz Karbar Tech Solutions",
+  "description": "Jonson JARVIS AI 24/7 Cloud Assistant",
   "main": "server.mjs",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "test": "node test_agent.mjs"
+    "start": "node server.mjs"
   },
   "dependencies": {
-    "@google/genai": "^0.1.1",
-    "@google/generative-ai": "^0.21.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "node-cron": "^3.0.3",
-    "puppeteer": "^22.15.0"
+    "node-cron": "^3.0.3"
   }
 }
