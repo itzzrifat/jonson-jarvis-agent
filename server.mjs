@@ -140,7 +140,7 @@ async function sendTelegram(chatId, text, photoPath = null) {
 async function transcribeAudioWithGemini(audioBuffer, mimeType = 'audio/ogg') {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return '';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
   const base64Data = audioBuffer.toString('base64');
   const payload = {
     contents: [{

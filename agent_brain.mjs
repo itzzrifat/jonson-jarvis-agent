@@ -255,7 +255,7 @@ Your capabilities:
 Tone: Professional, loyal, highly proactive, respectful, and sharp. Always reply in natural Bangla mixed with English technical terms.
 When the user asks you to do something that can be handled by a tool, invoke the tool!`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
   const payload = {
     contents: [
       ...history,

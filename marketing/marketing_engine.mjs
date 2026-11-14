@@ -3,7 +3,7 @@ export async function askGemini(prompt, apiKey = process.env.GEMINI_API_KEY) {
     return 'Gemini API key is not configured.';
   }
 
-  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+  const models = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.8-flash'];
   for (const model of models) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
