@@ -135,33 +135,6 @@ app.post('/api/trigger/ig-growth', async (req, res) => {
   }
 });
 
-// 3. Telegram Messaging Helper
-async function sendTelegram(chatId, text, photoPath = null) {
-  if (!BOT_TOKEN) return;
-  try {
-    if (photoPath) {
-      const fs = await import('fs');
-      if (fs.existsSync(photoPath)) {
-        const buf = fs.readFileSync(photoPath);
-        const formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append('caption', text.slice(0, 1024));
-        formData.append('photo', new Blob([buf], { type: 'image/png' }), 'proof.png');
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-        return;
-      }
-    }
-
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
-    });
-  } catch (e) {
-    console.error('[Telegram] Error sending message:', e.message);
-  }
-}
-
 // Helper: Transcribe Audio using Gemini Multimodal API
 async function transcribeAudioWithGemini(audioBuffer, mimeType = 'audio/ogg') {
   const apiKey = getGeminiApiKey();
