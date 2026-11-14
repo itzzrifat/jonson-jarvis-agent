@@ -288,37 +288,14 @@ When the user asks you to do something that can be handled by a tool, invoke the
     if (functionCall) {
       const toolResult = await executeTool(functionCall.name, functionCall.args || {});
 
-      const followupPayload = {
-        contents: [
-          ...history,
-          { role: 'user', parts: [{ text: userText }] },
-          { role: 'model', parts: [{ functionCall }] },
-          {
-            role: 'function',
-            parts: [{
-              functionResponse: {
-                name: functionCall.name,
-                response: toolResult
-              }
-            }]
-          }
-        ],
-        systemInstruction: { parts: [{ text: systemInstruction }] }
+      // Formulate natural, executive response in Bengali
+      const summarizePrompt = `${systemInstruction}\n\nUser asked: "${userText}"\nSystem tool "${functionCall.name}" executed with result: ${JSON.stringify(toolResult)}.\nProvide a calm, dignified, executive response in natural Bengali for Founder Rifat Uddin clearly presenting the result without raw JSON.`;
+
+      const naturalReply = await askGemini(summarizePrompt);
+      return { 
+        reply: naturalReply || 'কাজটি সফলভাবে সম্পন্ন হয়েছে রিফাত ভাই!', 
+        toolResult 
       };
-
-      const followRes = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(followupPayload)
-      });
-
-      if (followRes.ok) {
-        const followData = await followRes.json();
-        const finalAnswer = followData.candidates?.[0]?.content?.parts?.[0]?.text;
-        return { reply: finalAnswer || 'কাজটি সফলভাবে সম্পন্ন হয়েছে!', toolResult };
-      }
-
-      return { reply: `টাস্ক সম্পন্ন হয়েছে:\n\`\`\`json\n${JSON.stringify(toolResult, null, 2)}\n\`\`\``, toolResult };
     }
 
     const replyText = candidate?.content?.parts?.[0]?.text;

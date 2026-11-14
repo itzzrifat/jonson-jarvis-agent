@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/index.mjs": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     { "source": "/jarvis", "destination": "/jarvis.html" },
     { "source": "/api/(.*)", "destination": "/api" }
