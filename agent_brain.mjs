@@ -7,6 +7,7 @@ import { runInstagramCloudCycle, verifyInstagramCloudSession } from './marketing
 import { generateMarketingCampaign, generateViralDiscussionPost, askGemini } from './marketing/marketing_engine.mjs';
 import { addTask, listTasks, completeTask, addNote, listNotes, addTransaction, getExpenseSummary } from './storage.mjs';
 import { getGeminiApiKey } from './tts_engine.mjs';
+import { sendTelegramReport } from './telegram_gateway.mjs';
 
 const execPromise = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -147,6 +148,19 @@ export const AGENT_TOOLS = [
       },
       required: ['command']
     }
+  },
+  {
+    name: 'send_telegram_report',
+    description: 'Sends a plan, idea, note, task, or analysis directly to Founder Rifat Uddin\'s personal Telegram chat.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        title: { type: 'STRING', description: 'Topic or title of the plan/idea' },
+        content: { type: 'STRING', description: 'Detailed plan, idea, strategy, or note' },
+        category: { type: 'STRING', description: 'plan, idea, note, marketing, or task' }
+      },
+      required: ['title', 'content']
+    }
   }
 ];
 
@@ -165,11 +179,13 @@ export async function executeTool(toolName, args) {
 
     case 'generate_marketing_campaign': {
       const campaign = await generateMarketingCampaign(args.topic);
+      sendTelegramReport(`মার্কেটিং ক্যাম্পেইন: ${args.topic}`, campaign, 'marketing').catch(() => {});
       return { campaign };
     }
 
     case 'add_task_reminder': {
       const task = addTask(args.text, args.due_time);
+      sendTelegramReport(`নতুন টাস্ক সেভ করা হয়েছে`, `📌 <b>কাজ:</b> ${args.text}\n⏰ <b>সময়:</b> ${args.due_time || 'কোনো নির্দিষ্ট সময় নেই'}`, 'task').catch(() => {});
       return { success: true, task };
     }
 
@@ -180,7 +196,13 @@ export async function executeTool(toolName, args) {
 
     case 'save_note': {
       const note = addNote(args.title, args.content);
+      sendTelegramReport(`নোট: ${args.title}`, args.content, 'note').catch(() => {});
       return { success: true, note };
+    }
+
+    case 'send_telegram_report': {
+      const ok = await sendTelegramReport(args.title, args.content, args.category || 'plan');
+      return { success: ok, title: args.title };
     }
 
     case 'search_notes': {

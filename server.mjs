@@ -8,6 +8,7 @@ import { runFacebookCloudCycle, publishFacebookPostCloud, verifyFacebookCloudSes
 import { runInstagramCloudCycle, verifyInstagramCloudSession } from './marketing/instagram_cloud.mjs';
 import { addTask, listTasks, completeTask, addNote, listNotes, addTransaction, getExpenseSummary, loadStorage } from './storage.mjs';
 import { synthesizeBanglaVoice, getGeminiApiKey } from './tts_engine.mjs';
+import { sendTelegram, sendTelegramReport } from './telegram_gateway.mjs';
 
 dotenv.config();
 
@@ -87,6 +88,12 @@ app.post(['/api/jarvis/voice', '/jarvis/voice'], async (req, res) => {
     // Generate natural Bangla speech using Gemini TTS (Kore / Puck / Aoede / Charon)
     const chosenVoice = req.body.voice || 'Kore';
     const audioResult = await synthesizeBanglaVoice(spoken, chosenVoice);
+
+    // Auto-forward any plan, idea, note, strategy, or to-do query to Telegram
+    const isPlanOrIdea = /প্ল্যান|পরিকল্পনা|আইডিয়া|idea|plan|নোট|note|ক্যাম্পেইন|campaign|কৌশল|তালিকা|লিস্ট|রিমাইন্ডার|স্ট্র্যাটেজি|হিসাব|মার্কেটিং/i.test(userQuery + ' ' + reply);
+    if (isPlanOrIdea) {
+      sendTelegramReport(userQuery, reply, 'plan').catch(e => console.warn('[AutoTelegramError]', e.message));
+    }
 
     res.json({
       success: true,
