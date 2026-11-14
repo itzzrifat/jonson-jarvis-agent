@@ -7,7 +7,7 @@ import { processAgentMessage } from './agent_brain.mjs';
 import { runFacebookCloudCycle, publishFacebookPostCloud, verifyFacebookCloudSession } from './marketing/facebook_cloud.mjs';
 import { runInstagramCloudCycle, verifyInstagramCloudSession } from './marketing/instagram_cloud.mjs';
 import { addTask, listTasks, completeTask, addNote, listNotes, addTransaction, getExpenseSummary, loadStorage } from './storage.mjs';
-import { synthesizeBanglaVoice } from './tts_engine.mjs';
+import { synthesizeBanglaVoice, getGeminiApiKey } from './tts_engine.mjs';
 
 dotenv.config();
 
@@ -84,8 +84,8 @@ app.post(['/api/jarvis/voice', '/jarvis/voice'], async (req, res) => {
       .replace(/\n+/g, '. ')
       .trim();
 
-    // Generate natural Bangla speech using Gemini TTS (Puck / Aoede / Charon)
-    const chosenVoice = req.body.voice || 'Puck';
+    // Generate natural Bangla speech using Gemini TTS (Kore / Puck / Aoede / Charon)
+    const chosenVoice = req.body.voice || 'Kore';
     const audioResult = await synthesizeBanglaVoice(spoken, chosenVoice);
 
     res.json({
@@ -157,9 +157,9 @@ async function sendTelegram(chatId, text, photoPath = null) {
 
 // Helper: Transcribe Audio using Gemini Multimodal API
 async function transcribeAudioWithGemini(audioBuffer, mimeType = 'audio/ogg') {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getGeminiApiKey();
   if (!apiKey) return '';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
   const base64Data = audioBuffer.toString('base64');
   const payload = {
     contents: [{

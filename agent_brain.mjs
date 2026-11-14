@@ -6,6 +6,7 @@ import { runFacebookCloudCycle, publishFacebookPostCloud, verifyFacebookCloudSes
 import { runInstagramCloudCycle, verifyInstagramCloudSession } from './marketing/instagram_cloud.mjs';
 import { generateMarketingCampaign, generateViralDiscussionPost, askGemini } from './marketing/marketing_engine.mjs';
 import { addTask, listTasks, completeTask, addNote, listNotes, addTransaction, getExpenseSummary } from './storage.mjs';
+import { getGeminiApiKey } from './tts_engine.mjs';
 
 const execPromise = util.promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -235,7 +236,7 @@ export async function executeTool(toolName, args) {
 }
 
 export async function processAgentMessage(userText, history = []) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return { reply: '⚠️ GEMINI_API_KEY কনফিগার করা হয়নি।' };
   }
@@ -253,39 +254,40 @@ CRITICAL CONVERSATIONAL RULES (SPEAK EXACTLY LIKE GEMINI LIVE):
 6. When reporting business, tasks, or accounts, state the facts smoothly as spoken dialogue.
 7. When the user asks to perform an action (posts, tasks, finances, web), invoke the matching tool immediately!`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
-  const payload = {
-    contents: [
-      ...history,
-      { role: 'user', parts: [{ text: userText }] }
-    ],
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-    tools: [{
-      functionDeclarations: AGENT_TOOLS
-    }]
-  };
+  const models = ['gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview'];
+  let res = null;
 
-  try {
-    let res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const payload = {
+      contents: [
+        ...history,
+        { role: 'user', parts: [{ text: userText }] }
+      ],
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+      tools: [{
+        functionDeclarations: AGENT_TOOLS
+      }]
+    };
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn('[AgentBrain] Primary model fallback:', errText);
-      // Fallback to gemini-3-flash-preview
-      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-      res = await fetch(fallbackUrl, {
+    try {
+      res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) {
-        const fallbackText = await askGemini(`${systemInstruction}\n\nUser: ${userText}`);
-        return { reply: fallbackText };
-      }
+      if (res.ok) break;
+      const errText = await res.text();
+      console.warn(`[AgentBrain] ${model} error:`, errText.slice(0, 150));
+    } catch (e) {
+      console.warn(`[AgentBrain] ${model} fetch exception:`, e.message);
+    }
+  }
+
+  try {
+    if (!res || !res.ok) {
+      const fallbackText = await askGemini(`${systemInstruction}\n\nUser: ${userText}`);
+      return { reply: fallbackText };
     }
 
     const data = await res.json();

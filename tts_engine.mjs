@@ -1,31 +1,84 @@
 /**
  * Bangla Voice Engine using official Gemini TTS
- * Supports Gemini Live voices: Puck (Natural Male), Aoede (Natural Female), Charon (Dignified Male)
+ * Based on the Bangla Voice Skill (bangla-voice) specifications
+ * Supported Voices:
+ *   - Kore: Safest, firm, natural Bengali (Female default)
+ *   - Puck: Friendly, lively, conversational (Male)
+ *   - Aoede: Breezy, warm, lifestyle (Female)
+ *   - Charon: Dignified, executive, documentary (Male default)
+ *   - Sulafat: Warm, compassionate narration (Female)
  */
-export async function synthesizeBanglaVoice(text, voice = 'Puck') {
-  const apiKey = process.env.GEMINI_API_KEY;
+
+export function getGeminiApiKey() {
+  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+  if (process.env.GOOGLE_API_KEY) return process.env.GOOGLE_API_KEY;
+  for (const k of Object.keys(process.env)) {
+    if (k.startsWith('AQ.') || k.startsWith('AIzaSy')) return k;
+    const val = process.env[k];
+    if (typeof val === 'string' && (val.startsWith('AQ.') || val.startsWith('AIzaSy'))) return val;
+  }
+  return '';
+}
+
+/**
+ * Prepend a standard 44-byte RIFF/WAVE header to raw linear PCM
+ * so that any browser (Safari, iOS, Chrome, Firefox) can play it in <audio>
+ */
+export function pcmToWav(pcmBuffer, sampleRate = 24000, channels = 1, bytesPerSample = 2) {
+  const byteRate = sampleRate * channels * bytesPerSample;
+  const blockAlign = channels * bytesPerSample;
+  const header = Buffer.alloc(44);
+
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + pcmBuffer.length, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16); // SubChunk1Size (16 for PCM)
+  header.writeUInt16LE(1, 20);  // AudioFormat (1 for PCM)
+  header.writeUInt16LE(channels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bytesPerSample * 8, 34); // BitsPerSample
+  header.write('data', 36);
+  header.writeUInt32LE(pcmBuffer.length, 40);
+
+  return Buffer.concat([header, pcmBuffer]);
+}
+
+export async function synthesizeBanglaVoice(text, voice = 'Kore') {
+  const apiKey = getGeminiApiKey();
   if (!apiKey || !text) return null;
 
   // Clean markdown, symbols, and formatting for natural spoken speech
+  // NEVER leak prompt instructions into spoken audio!
   const cleanText = text
     .replace(/<[^>]*>?/gm, '')
     .replace(/[*#`_~]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Keep spoken response concise for fast sub-2-second delivery
-  const speechText = cleanText.length > 180 
-    ? cleanText.slice(0, 180).replace(/[,।!?][^,।!?]*$/, '') + '।'
+  if (!cleanText) return null;
+
+  // Keep spoken response concise for fast delivery
+  const speechText = cleanText.length > 200 
+    ? cleanText.slice(0, 200).replace(/[,।!?][^,।!?]*$/, '') + '।'
     : cleanText;
 
-  // Prioritize fast, high-availability TTS models
-  const models = ['gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview', 'gemini-3.8-flash-tts'];
+  // Prioritize verified working Gemini TTS models
+  const models = [
+    'gemini-2.5-flash-preview-tts',
+    'gemini-3.8-flash-lite-tts',
+    'gemini-3.1-flash-tts-preview',
+    'gemini-3.8-flash-tts'
+  ];
   
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const payload = {
       contents: [{
         parts: [{
+          // Text ONLY - no prompt instructions here so model never reads instructions aloud
           text: speechText
         }]
       }],
@@ -34,7 +87,7 @@ export async function synthesizeBanglaVoice(text, voice = 'Puck') {
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
-              voiceName: voice || 'Puck'
+              voiceName: voice || 'Kore'
             }
           }
         }
@@ -43,7 +96,7 @@ export async function synthesizeBanglaVoice(text, voice = 'Puck') {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -63,10 +116,29 @@ export async function synthesizeBanglaVoice(text, voice = 'Puck') {
       const part = data.candidates?.[0]?.content?.parts?.[0];
       const inline = part?.inlineData || part?.inline_data;
       if (inline?.data) {
+        let rawBuf = Buffer.from(inline.data, 'base64');
+        let sampleRate = 24000;
+
+        // Parse rate from mimeType if provided e.g. "audio/L16;codec=pcm;rate=24000"
+        const mimeStr = inline.mimeType || inline.mime_type || '';
+        for (const token of mimeStr.split(';')) {
+          const trimmed = token.trim();
+          if (trimmed.startsWith('rate=')) {
+            const parsedRate = parseInt(trimmed.split('=')[1], 10);
+            if (!isNaN(parsedRate) && parsedRate > 0) sampleRate = parsedRate;
+          }
+        }
+
+        // If raw PCM without RIFF header, wrap in 44-byte WAV header
+        if (rawBuf.subarray(0, 4).toString() !== 'RIFF') {
+          rawBuf = pcmToWav(rawBuf, sampleRate, 1, 2);
+        }
+
         return {
-          base64: inline.data,
-          mimeType: inline.mimeType || 'audio/wav',
-          voiceUsed: voice
+          base64: rawBuf.toString('base64'),
+          mimeType: 'audio/wav',
+          voiceUsed: voice,
+          seconds: Math.round((rawBuf.length - 44) / (sampleRate * 2) * 10) / 10
         };
       }
     } catch (err) {

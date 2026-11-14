@@ -1,12 +1,15 @@
-export async function askGemini(prompt, apiKey = process.env.GEMINI_API_KEY) {
-  if (!apiKey) {
+import { getGeminiApiKey } from '../tts_engine.mjs';
+
+export async function askGemini(prompt, apiKey = null) {
+  const key = apiKey || getGeminiApiKey();
+  if (!key) {
     return 'Gemini API key is not configured.';
   }
 
-  const models = ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.5-flash'];
+  const models = ['gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview'];
   for (const model of models) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
       const payload = {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
