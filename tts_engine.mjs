@@ -20,20 +20,13 @@ export async function synthesizeBanglaVoice(text, voice = 'Puck') {
 
   // Prioritize fast, high-availability TTS models
   const models = ['gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts-preview', 'gemini-3.8-flash-tts'];
-
-  let voicePrompt = `পড়ো একজন বন্ধুসুলভ ও স্বাভাবিক কথ্য ভঙ্গিতে:\n\n${speechText}`;
-  if (voice === 'Charon') {
-    voicePrompt = `পড়ো একটি শান্ত, স্পষ্ট ও রাশভারী এক্সিকিউটিভ অ্যাসিস্ট্যান্ট ভঙ্গিতে:\n\n${speechText}`;
-  } else if (voice === 'Aoede') {
-    voicePrompt = `পড়ো একজন অমায়িক, মিষ্টি ও প্রাণবন্ত নারীর স্বাভাবিক কথ্য ভঙ্গিতে:\n\n${speechText}`;
-  }
   
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const payload = {
       contents: [{
         parts: [{
-          text: voicePrompt
+          text: speechText
         }]
       }],
       generationConfig: {
