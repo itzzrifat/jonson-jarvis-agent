@@ -1,0 +1,5 @@
+node_modules/
+.env
+fb_cloud_profile/
+ig_cloud_profile/
+*.log
