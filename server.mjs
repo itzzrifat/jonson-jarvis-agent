@@ -7,6 +7,7 @@ import { processAgentMessage } from './agent_brain.mjs';
 import { runFacebookCloudCycle, publishFacebookPostCloud, verifyFacebookCloudSession } from './marketing/facebook_cloud.mjs';
 import { runInstagramCloudCycle, verifyInstagramCloudSession } from './marketing/instagram_cloud.mjs';
 import { addTask, listTasks, completeTask, addNote, listNotes, addTransaction, getExpenseSummary, loadStorage } from './storage.mjs';
+import { synthesizeBanglaVoice } from './tts_engine.mjs';
 
 dotenv.config();
 
@@ -55,7 +56,19 @@ app.get('/jarvis', (req, res) => {
 
 // 1.2 JARVIS Voice API Endpoint (For iPhone Siri Shortcuts, Action Button & Web HUD)
 app.post('/api/jarvis/voice', async (req, res) => {
-  const userQuery = (req.body.message || req.body.prompt || req.body.text || req.body.query || '').trim();
+  let userQuery = (req.body.message || req.body.prompt || req.body.text || req.body.query || '').trim();
+
+  // If audio is uploaded directly (base64)
+  if (!userQuery && req.body.audio) {
+    try {
+      const audioBuf = Buffer.from(req.body.audio, 'base64');
+      userQuery = await transcribeAudioWithGemini(audioBuf, req.body.mimeType || 'audio/webm');
+      addLog(`[JARVIS Web Audio Transcribed] "${userQuery}"`);
+    } catch (e) {
+      console.warn('[VoiceAudioError]', e.message);
+    }
+  }
+
   if (!userQuery) {
     return res.status(400).json({ error: 'Message or text is required.' });
   }
@@ -71,11 +84,16 @@ app.post('/api/jarvis/voice', async (req, res) => {
       .replace(/\n+/g, '. ')
       .trim();
 
+    // Generate real Bangla speech using Gemini TTS (Charon voice, bangla-voice skill)
+    const audioResult = await synthesizeBanglaVoice(spoken, 'Charon');
+
     res.json({
       success: true,
       query: userQuery,
       reply,
       spoken,
+      audioBase64: audioResult ? audioResult.base64 : null,
+      audioMime: audioResult ? audioResult.mimeType : 'audio/wav',
       toolResult: agentResponse.toolResult || null
     });
   } catch (err) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>JARVIS — Jonson AI Cloud</title>
   
-  <!-- Apple iOS Web App Tags -->
+  <!-- Apple iOS Web App Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JARVIS">
@@ -23,8 +23,8 @@
       --cyan: #00f2fe;
       --blue: #4facfe;
       --glow: rgba(0, 242, 254, 0.45);
-      --card-bg: rgba(15, 23, 42, 0.75);
-      --border: rgba(0, 242, 254, 0.2);
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --border: rgba(0, 242, 254, 0.25);
       --text: #f8fafc;
       --text-dim: #94a3b8;
     }
@@ -48,8 +48,8 @@
       padding-top: env(safe-area-inset-top, 20px);
       padding-bottom: env(safe-area-inset-bottom, 20px);
       background-image: 
-        radial-gradient(circle at 50% 30%, rgba(0, 242, 254, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 50% 90%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+        radial-gradient(circle at 50% 25%, rgba(0, 242, 254, 0.15) 0%, transparent 65%),
+        radial-gradient(circle at 50% 85%, rgba(79, 70, 229, 0.1) 0%, transparent 55%);
     }
 
     /* Top HUD Bar */
@@ -58,9 +58,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .brand-title {
@@ -83,12 +83,11 @@
       font-size: 11px;
       font-weight: 600;
       color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
+      background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.3);
       padding: 4px 10px;
       border-radius: 20px;
       font-family: 'Orbitron', monospace;
-      letter-spacing: 0.5px;
     }
 
     .live-dot {
@@ -112,7 +111,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px 20px;
+      padding: 20px 20px;
       position: relative;
     }
 
@@ -125,39 +124,37 @@
       justify-content: center;
       cursor: pointer;
       user-select: none;
+      touch-action: manipulation;
     }
 
-    /* Outer Ring */
     .ring-outer {
       position: absolute;
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      border: 2px dashed rgba(0, 242, 254, 0.3);
+      border: 2px dashed rgba(0, 242, 254, 0.35);
       animation: rotate-cw 20s linear infinite;
     }
 
-    /* Middle Segmented Ring */
     .ring-middle {
       position: absolute;
       width: 82%;
       height: 82%;
       border-radius: 50%;
-      border: 3px solid rgba(0, 242, 254, 0.15);
+      border: 3px solid rgba(0, 242, 254, 0.2);
       border-top-color: var(--cyan);
       border-bottom-color: var(--blue);
-      animation: rotate-ccw 12s linear infinite;
-      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+      animation: rotate-ccw 10s linear infinite;
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.25);
     }
 
-    /* Core Glowing Center */
     .reactor-core {
       width: 58%;
       height: 58%;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(79, 70, 229, 0.2) 60%, rgba(3, 7, 18, 0.9) 100%);
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(79, 70, 229, 0.25) 60%, rgba(3, 7, 18, 0.95) 100%);
       border: 2px solid var(--cyan);
-      box-shadow: 0 0 30px var(--glow), inset 0 0 20px var(--glow);
+      box-shadow: 0 0 35px var(--glow), inset 0 0 25px var(--glow);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -168,19 +165,25 @@
 
     .reactor-core.listening {
       border-color: #f43f5e;
-      box-shadow: 0 0 45px rgba(244, 63, 94, 0.6), inset 0 0 25px rgba(244, 63, 94, 0.4);
-      animation: pulse-core 1.2s infinite alternate;
+      box-shadow: 0 0 50px rgba(244, 63, 94, 0.7), inset 0 0 30px rgba(244, 63, 94, 0.5);
+      animation: pulse-core 0.9s infinite alternate;
     }
 
     .reactor-core.speaking {
       border-color: #10b981;
-      box-shadow: 0 0 45px rgba(16, 185, 129, 0.6), inset 0 0 25px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 50px rgba(16, 185, 129, 0.7), inset 0 0 30px rgba(16, 185, 129, 0.5);
       animation: pulse-core 0.8s infinite alternate;
+    }
+
+    .reactor-core.thinking {
+      border-color: #f59e0b;
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.7), inset 0 0 30px rgba(245, 158, 11, 0.5);
+      animation: pulse-core 0.7s infinite alternate;
     }
 
     @keyframes pulse-core {
       0% { transform: scale(0.96); }
-      100% { transform: scale(1.05); }
+      100% { transform: scale(1.06); }
     }
 
     @keyframes rotate-cw {
@@ -197,7 +200,7 @@
       font-size: 38px;
       color: var(--cyan);
       filter: drop-shadow(0 0 8px var(--cyan));
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
 
     .status-text {
@@ -207,55 +210,57 @@
       letter-spacing: 1.5px;
       color: var(--text-dim);
       text-transform: uppercase;
+      font-weight: 700;
     }
 
     /* Soundwave Visualizer */
     .waveform {
       display: flex;
-      gap: 4px;
+      gap: 5px;
       align-items: center;
-      height: 24px;
+      height: 28px;
       margin-top: 16px;
     }
 
     .wave-bar {
-      width: 3px;
+      width: 4px;
       height: 6px;
       background: var(--cyan);
-      border-radius: 3px;
+      border-radius: 4px;
       transition: height 0.15s ease;
-      box-shadow: 0 0 6px var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
     }
 
     .waveform.active .wave-bar {
-      animation: bounce 0.6s infinite alternate;
+      animation: bounce 0.5s infinite alternate;
     }
 
-    .waveform.active .wave-bar:nth-child(2) { animation-delay: 0.1s; }
-    .waveform.active .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .waveform.active .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+    .waveform.active .wave-bar:nth-child(2) { animation-delay: 0.25s; }
+    .waveform.active .wave-bar:nth-child(3) { animation-delay: 0.05s; }
     .waveform.active .wave-bar:nth-child(4) { animation-delay: 0.3s; }
     .waveform.active .wave-bar:nth-child(5) { animation-delay: 0.15s; }
-    .waveform.active .wave-bar:nth-child(6) { animation-delay: 0.25s; }
-    .waveform.active .wave-bar:nth-child(7) { animation-delay: 0.05s; }
+    .waveform.active .wave-bar:nth-child(6) { animation-delay: 0.2s; }
+    .waveform.active .wave-bar:nth-child(7) { animation-delay: 0.35s; }
 
     @keyframes bounce {
-      0% { height: 4px; }
-      100% { height: 22px; }
+      0% { height: 6px; }
+      100% { height: 26px; }
     }
 
-    /* Assistant Dialogue Box */
+    /* Dialogue Card */
     .dialogue-card {
       width: 100%;
-      max-width: 480px;
+      max-width: 500px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 16px 20px;
-      margin-top: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      margin-top: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      min-height: 90px;
+      min-height: 95px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -264,17 +269,19 @@
     .dialogue-speaker {
       font-family: 'Orbitron', monospace;
       font-size: 10px;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       color: var(--cyan);
       margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 6px;
+      text-transform: uppercase;
+      font-weight: 700;
     }
 
     .dialogue-text {
       font-size: 15px;
-      line-height: 1.5;
+      line-height: 1.6;
       color: var(--text);
       max-height: 140px;
       overflow-y: auto;
@@ -294,13 +301,13 @@
     .quick-actions::-webkit-scrollbar { display: none; }
 
     .action-pill {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(0, 242, 254, 0.25);
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(0, 242, 254, 0.3);
       color: #e2e8f0;
       padding: 8px 14px;
       border-radius: 20px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -309,8 +316,8 @@
     }
 
     .action-pill:active {
-      transform: scale(0.96);
-      background: rgba(0, 242, 254, 0.2);
+      transform: scale(0.95);
+      background: rgba(0, 242, 254, 0.25);
     }
 
     /* Bottom Input Bar */
@@ -318,10 +325,34 @@
       display: flex;
       gap: 10px;
       padding: 12px 20px 16px 20px;
-      background: rgba(3, 7, 18, 0.85);
+      background: rgba(3, 7, 18, 0.9);
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
+    }
+
+    .mic-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      color: var(--cyan);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .mic-btn.active {
+      background: #f43f5e;
+      color: #fff;
+      border-color: #f43f5e;
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.6);
+      animation: pulse-core 0.8s infinite alternate;
     }
 
     .input-bar input {
@@ -338,7 +369,7 @@
 
     .input-bar input:focus {
       border-color: var(--cyan);
-      box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
     }
 
     .send-btn {
@@ -370,13 +401,13 @@
       <span>⚡</span> JARVIS AI
     </div>
     <div class="online-indicator">
-      <span class="live-dot"></span> 24/7 CLOUD
+      <span class="live-dot"></span> 24/7 CLOUD LIVE
     </div>
   </header>
 
   <!-- Arc Reactor Center -->
   <main class="reactor-container">
-    <div class="arc-reactor" id="reactorBtn">
+    <div class="arc-reactor" id="reactorBtn" title="কথা বলতে ট্যাপ করুন">
       <div class="ring-outer"></div>
       <div class="ring-middle"></div>
       <div class="reactor-core" id="reactorCore">
@@ -399,38 +430,40 @@
     <!-- Dialogue Output Box -->
     <div class="dialogue-card">
       <div class="dialogue-speaker" id="speakerLabel">
-        <span>🤖</span> JONSON CLOUD • RIFAT UDDIN'S CHIEF OF STAFF
+        <span>🤖</span> JONSON CLOUD • BANGLA VOICE SKILL (CHARON)
       </div>
       <div class="dialogue-text" id="dialogueText">
-        "আসসালামু আলাইকুম রিফাত ভাই। আমি প্রস্তুত। মুখে কথা বলতে আর্করিয়েক্টরে ট্যাপ করুন।"
+        "আসসালামু আলাইকুম রিফাত ভাই। আমি সম্পূর্ণ প্রস্তুত। কথা বলতে আর্করিয়েক্টরে একবার ট্যাপ করুন।"
       </div>
     </div>
   </main>
 
   <!-- Quick Action Pills -->
   <section class="quick-actions">
-    <button class="action-pill" onclick="sendQuickPrompt('আজকের সহজ কারবার হিসাব ও কালেকশন কত?')">
+    <button class="action-pill" onclick="sendQuickPrompt('আজকের সহজ কারবার হিসাব ও ক্যাশ কালেকশন কত?')">
       📊 আজকের কালেকশন
     </button>
     <button class="action-pill" onclick="sendQuickPrompt('আমার আজকের পেন্ডিং কাজের তালিকা দেখাও')">
       📋 পেন্ডিং টাস্ক
     </button>
-    <button class="action-pill" onclick="sendQuickPrompt('ফেসবুক অটো-গ্রোথ সাইকেল রান করো')">
-      🚀 ফেসবুক গ্রোথ
-    </button>
     <button class="action-pill" onclick="sendQuickPrompt('মর্নিং এক্সিকিউটিভ ব্রিফিং দাও')">
       🌅 Morning Briefing
+    </button>
+    <button class="action-pill" onclick="sendQuickPrompt('ফেসবুকে নতুন পোস্টের আইডিয়া দাও')">
+      ✍️ ফেসবুক আইডিয়া
     </button>
   </section>
 
   <!-- Bottom Input Bar -->
   <footer class="input-bar">
+    <button class="mic-btn" id="bottomMicBtn" onclick="toggleRecording()" title="কথা বলুন">🎙️</button>
     <input type="text" id="textInput" placeholder="মুখে কথা বলুন বা বাংলায় লিখুন..." autocomplete="off">
     <button class="send-btn" id="sendBtn" onclick="submitTextInput()">➤</button>
   </footer>
 
   <script>
     const reactorBtn = document.getElementById('reactorBtn');
+    const bottomMicBtn = document.getElementById('bottomMicBtn');
     const reactorCore = document.getElementById('reactorCore');
     const micIcon = document.getElementById('micIcon');
     const statusLabel = document.getElementById('statusLabel');
@@ -438,83 +471,181 @@
     const waveform = document.getElementById('waveform');
     const textInput = document.getElementById('textInput');
 
-    let isListening = false;
-    let recognition = null;
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let currentAudio = null;
 
-    // 1. Initialize Speech Recognition (Supported in iOS Safari)
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'bn-BD'; // Primary Bengali, handles English naturally
-
-      recognition.onstart = () => {
-        isListening = true;
-        reactorCore.className = 'reactor-core listening';
-        statusLabel.innerText = 'LISTENING';
-        micIcon.innerText = '🔴';
-        waveform.className = 'waveform active';
-        dialogueText.innerText = "শুনছি রিফাত ভাই, বলুন...";
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        console.log('[SpeechIn]', transcript);
-        dialogueText.innerText = `🗣️ "${transcript}"`;
-        processUserQuery(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        console.warn('[SpeechError]', event.error);
-        resetState();
-        if (event.error !== 'no-speech') {
-          dialogueText.innerText = "ভয়েস ডিটেক্ট হয়নি। আবার ট্যাপ করে বলুন বা নিচে লিখে পাঠান।";
-        }
-      };
-
-      recognition.onend = () => {
-        if (reactorCore.className.includes('listening')) {
-          resetState();
-        }
-      };
+    // Unlock iOS Audio on First Interaction
+    function unlockAudio() {
+      if (!window.audioUnlocked) {
+        const dummy = new Audio();
+        dummy.play().catch(() => {});
+        window.audioUnlocked = true;
+      }
     }
 
-    function toggleListening() {
-      if (!recognition) {
-        alert('আপনার ব্রাউজারে স্পিচ রিকগনিশন সাপোর্ট নেই। নিচের টেক্সট বক্স ব্যবহার করুন।');
+    // 1. Voice Recording Toggle (MediaRecorder API with Web Speech fallback)
+    async function toggleRecording() {
+      unlockAudio();
+
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    reactorBtn.addEventListener('click', toggleRecording);
+
+    async function startRecording() {
+      audioChunks = [];
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(track => track.stop());
+          const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          if (audioBlob.size > 1000) {
+            uploadAudioQuery(audioBlob);
+          } else {
+            resetState();
+            dialogueText.innerText = "ভয়েস পাওয়া যায়নি। আবার চেষ্টা করুন।";
+          }
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        setListeningState();
+      } catch (err) {
+        console.warn('[MicError] Fallback to SpeechRecognition:', err.message);
+        fallbackSpeechRecognition();
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      setThinkingState();
+    }
+
+    // Web Speech API Fallback
+    function fallbackSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('আপনার ব্রাউজারে মাইক্রোফোন পারমিশন এনাবল করুন অথবা নিচের ইনপুট বক্সে লিখুন।');
+        resetState();
         return;
       }
 
-      if (isListening) {
-        recognition.stop();
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'bn-BD';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        isRecording = true;
+        setListeningState();
+      };
+
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        dialogueText.innerText = `🗣️ "${transcript}"`;
+        processTextQuery(transcript);
+      };
+
+      recognition.onerror = () => {
         resetState();
-      } else {
-        try {
-          recognition.start();
-        } catch (e) {
-          recognition.stop();
-          setTimeout(() => recognition.start(), 200);
-        }
+        dialogueText.innerText = "ভয়েস রেকর্ড করা যায়নি। নিচে লিখে পাঠান।";
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        resetState();
       }
     }
 
-    reactorBtn.addEventListener('click', toggleListening);
+    function setListeningState() {
+      reactorCore.className = 'reactor-core listening';
+      bottomMicBtn.className = 'mic-btn active';
+      statusLabel.innerText = 'LISTENING';
+      micIcon.innerText = '🔴';
+      waveform.className = 'waveform active';
+      dialogueText.innerText = "শুনছি রিফাত ভাই... কথা শেষ হলে আবার ট্যাপ করুন।";
+    }
+
+    function setThinkingState() {
+      reactorCore.className = 'reactor-core thinking';
+      bottomMicBtn.className = 'mic-btn';
+      statusLabel.innerText = 'THINKING';
+      micIcon.innerText = '🧠';
+      waveform.className = 'waveform';
+      dialogueText.innerText = "চিন্তা করছি এবং উত্তর প্রস্তুত করছি...";
+    }
+
+    function setSpeakingState() {
+      reactorCore.className = 'reactor-core speaking';
+      bottomMicBtn.className = 'mic-btn';
+      statusLabel.innerText = 'SPEAKING';
+      micIcon.innerText = '🔊';
+      waveform.className = 'waveform active';
+    }
 
     function resetState() {
-      isListening = false;
+      isRecording = false;
       reactorCore.className = 'reactor-core';
+      bottomMicBtn.className = 'mic-btn';
       statusLabel.innerText = 'STANDBY';
       micIcon.innerText = '🎙️';
       waveform.className = 'waveform';
     }
 
-    // 2. Process Query with Cloud API
-    async function processUserQuery(query) {
-      reactorCore.className = 'reactor-core';
-      statusLabel.innerText = 'THINKING';
-      micIcon.innerText = '🧠';
-      waveform.className = 'waveform';
+    // 2. Upload Audio Query (Direct to Gemini Multimodal Audio Transcriber)
+    async function uploadAudioQuery(blob) {
+      setThinkingState();
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result.split(',')[1];
+        try {
+          const res = await fetch('/api/jarvis/voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audio: base64Audio,
+              mimeType: blob.type || 'audio/webm'
+            })
+          });
+
+          const data = await res.json();
+          handleServerResponse(data);
+        } catch (e) {
+          console.error(e);
+          dialogueText.innerText = "সার্ভারে কানেক্ট হতে সমস্যা হয়েছে।";
+          resetState();
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+
+    // 3. Process Text Query
+    async function processTextQuery(query) {
+      setThinkingState();
 
       try {
         const res = await fetch('/api/jarvis/voice', {
@@ -524,56 +655,62 @@
         });
 
         const data = await res.json();
-        const reply = data.reply || 'দুঃখিত, কোনো উত্তর পাওয়া যায়নি।';
-        dialogueText.innerHTML = reply.replace(/\n/g, '<br>');
-
-        // Voice output via SpeechSynthesis
-        speakResponse(data.spoken || reply);
-      } catch (err) {
-        console.error(err);
+        handleServerResponse(data);
+      } catch (e) {
+        console.error(e);
         dialogueText.innerText = "সার্ভারে কানেক্ট হতে সমস্যা হয়েছে।";
         resetState();
       }
     }
 
-    // 3. Speech Synthesis (Calm Assistant Voice)
-    function speakResponse(text) {
-      if (!('speechSynthesis' in window)) {
+    // 4. Handle Server Response & Play Natural Bangla Audio (Bangla-Voice Skill / Charon)
+    function handleServerResponse(data) {
+      const reply = data.reply || 'কাজ সম্পন্ন হয়েছে!';
+      dialogueText.innerHTML = reply.replace(/\n/g, '<br>');
+
+      // Play Gemini TTS Audio
+      if (data.audioBase64) {
+        playBanglaVoice(data.audioBase64, data.audioMime || 'audio/wav');
+      } else {
         resetState();
-        return;
       }
-
-      window.speechSynthesis.cancel();
-      const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[*#`_]/g, '');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'bn-BD';
-      utterance.rate = 0.95; // Calm and dignified pace
-
-      utterance.onstart = () => {
-        reactorCore.className = 'reactor-core speaking';
-        statusLabel.innerText = 'SPEAKING';
-        micIcon.innerText = '🔊';
-        waveform.className = 'waveform active';
-      };
-
-      utterance.onend = () => {
-        resetState();
-      };
-
-      utterance.onerror = () => {
-        resetState();
-      };
-
-      window.speechSynthesis.speak(utterance);
     }
 
-    // 4. Text Input Submission
+    function playBanglaVoice(base64Wav, mimeType) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+
+      setSpeakingState();
+      const audioUrl = `data:${mimeType};base64,${base64Wav}`;
+      currentAudio = new Audio(audioUrl);
+
+      currentAudio.onended = () => {
+        resetState();
+        currentAudio = null;
+      };
+
+      currentAudio.onerror = (e) => {
+        console.warn('[AudioPlayError]', e);
+        resetState();
+        currentAudio = null;
+      };
+
+      currentAudio.play().catch(err => {
+        console.warn('[AutoplayPolicy]', err);
+        resetState();
+      });
+    }
+
+    // 5. Input Submission
     function submitTextInput() {
+      unlockAudio();
       const q = textInput.value.trim();
       if (!q) return;
       textInput.value = '';
       dialogueText.innerText = `🗣️ "${q}"`;
-      processUserQuery(q);
+      processTextQuery(q);
     }
 
     textInput.addEventListener('keydown', (e) => {
@@ -581,8 +718,9 @@
     });
 
     function sendQuickPrompt(prompt) {
+      unlockAudio();
       dialogueText.innerText = `🗣️ "${prompt}"`;
-      processUserQuery(prompt);
+      processTextQuery(prompt);
     }
   </script>
 </body>
